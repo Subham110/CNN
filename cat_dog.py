@@ -49,7 +49,6 @@ model.add(Conv2D(128, kernel_size=(3, 3), padding='valid', activation='relu'))
 model.add(BatchNormalization())
 model.add(MaxPooling2D(pool_size=(2, 2), strides=2, padding='valid'))
 
-
 model.add(Flatten())
 
 model.add(Dense(128, activation='relu'))
@@ -61,7 +60,7 @@ model.add(Dropout(0.1))
 
 model.add(Dense(1, activation='sigmoid'))
 
-
+#to check the how many parametr
 model.summary()
 
 model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001), loss='binary_crossentropy', metrics=['accuracy'])
