@@ -144,3 +144,4 @@ The baseline MNIST CNN model achieves high accuracy (>98%) within just 2 epochs 
 ## 📄 License
 
 This repository is maintained for educational and machine learning research purposes.
+
