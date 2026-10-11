@@ -1,30 +1,69 @@
-# Convolutional Neural Networks (CNN) 🧠
+# Convolutional Neural Networks & Computer Vision 🧠
 
 [![Python](https://img.shields.io/badge/Python-3.13+-blue.svg)](https://www.python.org/)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.21+-orange.svg)](https://www.tensorflow.org/)
 [![Keras](https://img.shields.io/badge/Keras-3.15+-red.svg)](https://keras.io/)
+[![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-00FFFF.svg)](https://github.com/ultralytics/ultralytics)
 [![Package Manager](https://img.shields.io/badge/Managed%20by-uv-purple.svg)](https://github.com/astral-sh/uv)
 
-A collection of Deep Learning experiments, implementations, and workflows focusing on **Convolutional Neural Networks (CNNs)** for computer vision tasks using TensorFlow and Keras.
+A collection of Deep Learning and Computer Vision projects covering **Convolutional Neural Networks (CNNs)**, **Transfer Learning**, and **Instance Segmentation (YOLOv8)** using TensorFlow, Keras, and Ultralytics.
 
 ---
 
 ## 📌 Features
 
-- **MNIST Digit Classification (`Train_CNN.py`)**:
-  - Preprocesses 28x28 grayscale handwritten digits.
-  - Builds and trains a multi-layer CNN architecture.
-  - Evaluates model performance and plots training vs. validation accuracy.
-  - Performs sample inference and visualizes predictions.
-- **Cat vs Dog Image Classification (`cat_dog.py`)**:
-  - Image classification pipeline for binary pet recognition using Kaggle datasets.
-- **Object Detection & Exploration (`colab.ipynb`)**:
-  - Google Colab-ready notebook for advanced computer vision experiments (including YOLO and custom detection).
+### 1. 🕳️ Pothole Instance Segmentation (`pothole.py`)
+- **Model**: Pre-trained `yolov8n-seg.pt` (YOLOv8 Nano Segmentation).
+- **Dataset Analysis & EDA**:
+  - Parses YOLO format `data.yaml` configuration.
+  - Verifies image integrity and dimension uniformity across training and validation sets.
+  - Visualizes random samples from the dataset with Matplotlib.
+- **Training & Fine-Tuning**:
+  - Trains for 80 epochs with early stopping (`patience=10`), `imgsz=640`, and `batch=16`.
+  - Employs `AdamW` optimizer (`lr0=0.0001`, `lrf=0.01`), with `dropout=0.25` for regularization.
+- **Evaluation & Diagnostics**:
+  - Extracts and plots multi-component learning curves from `results.csv`:
+    - **Bounding Box Loss** (`train/box_loss` vs `val/box_loss`)
+    - **Classification Loss** (`train/cls_loss` vs `val/cls_loss`)
+    - **Distribution Focal Loss** (`train/dfl_loss` vs `val/dfl_loss`)
+    - **Segmentation Mask Loss** (`train/seg_loss` vs `val/seg_loss`)
+- **Inference & Video Pipeline**:
+  - Batch validation inference displaying predicted masks and bounding boxes in a 3x3 grid.
+  - Video inference on road footage with OpenCV post-processing (`cv2.VideoWriter` / `mp4v` codec) for seamless video playback.
 
 ---
 
-## 🏗️ Model Architecture (MNIST)
+### 2. 🐱🐶 Cat vs Dog Classification (`cat_dog.py`)
+- Deep CNN architecture with:
+  - 3 Convolutional blocks (`Conv2D` + `BatchNormalization` + `MaxPooling2D`).
+  - Fully connected classification head with `Dropout(0.1)` regularization.
+- Data loading with `tf.keras.utils.image_dataset_from_directory` on 256x256 RGB images.
+- Training accuracy/loss visualization and single-image test prediction.
 
+---
+
+### 3. 🔄 Transfer Learning with VGG16 (`Transfer.py`)
+- Uses pre-trained **VGG16** (ImageNet weights) as a frozen convolutional feature extractor (`conv_base.trainable = False`).
+- Custom classification head with `Dense(256, relu)` and `Dense(1, sigmoid)`.
+- Real-time data augmentation via `ImageDataGenerator` (shear, zoom, horizontal flip).
+
+---
+
+### 4. ✍️ MNIST Digit Classification (`Train_CNN.py`)
+- Baseline CNN for handwritten digit recognition on 28x28 grayscale images.
+- Evaluates test accuracy (>98%) and plots training vs. validation accuracy.
+- Performs single-sample inference and visualization.
+
+---
+
+### 5. 📓 Interactive Notebooks (`colab.ipynb`)
+- Google Colab notebook for experimenting with YOLO object detection, model checkpoints, and datasets.
+
+---
+
+## 🏗️ Architectures
+
+### MNIST CNN (`Train_CNN.py`)
 ```text
 Input (28x28x1 Grayscale Image)
        │
@@ -47,16 +86,38 @@ Dense (128 units, ReLU activation)
 Dense (10 units, Softmax activation) -> Output Probabilities (0-9)
 ```
 
+### Pothole Segmentation Pipeline (`pothole.py`)
+```text
+Road Imagery / Video Stream
+       │
+       ▼
+YOLOv8 Nano Segmentation Backbone & Neck (CSPDarknet + PANet)
+       │
+       ├─────────────────────────┬─────────────────────────┐
+       ▼                         ▼                         ▼
+Bounding Box Head         Classification Head       Mask Prototype & Coeff Head
+(Box Coordinates)         (Pothole Class Conf)      (Polygon Segmentation Mask)
+       │                         │                         │
+       └─────────────────────────┼─────────────────────────┘
+                                 │
+                                 ▼
+                     Annotated Image / Video
+```
+
 ---
 
 ## 📁 Repository Structure
 
 ```text
 CNN/
+├── pothole.py            # YOLOv8 road pothole instance segmentation & video processing
+├── Transfer.py           # VGG16 transfer learning with data augmentation
+├── cat_dog.py            # Cat vs Dog classification with Batch Normalization & Dropout
 ├── Train_CNN.py          # MNIST CNN training, evaluation & inference script
-├── cat_dog.py            # Cat vs Dog classification pipeline
 ├── main.py               # Application entrypoint
 ├── colab.ipynb           # Interactive Jupyter / Google Colab notebook
+├── cat2.webp             # Sample cat image for inference testing
+├── dog2.jpg              # Sample dog image for inference testing
 ├── pyproject.toml        # Project dependencies and configuration
 ├── uv.lock               # Deterministic dependency lockfile
 ├── .python-version       # Target Python version (3.13)
@@ -72,6 +133,7 @@ CNN/
 
 - Python 3.13 or higher
 - [uv](https://github.com/astral-sh/uv) (recommended) or standard `pip`
+- NVIDIA GPU with CUDA drivers (recommended for YOLOv8 training)
 
 ### 1. Clone the Repository
 
@@ -101,9 +163,14 @@ pip install -r pyproject.toml
 ```
 
 Key dependencies:
+- `ultralytics`
 - `tensorflow`
 - `keras`
+- `opencv-python`
 - `matplotlib`
+- `seaborn`
+- `pyyaml`
+- `pillow`
 - `numpy`
 - `pandas`
 - `kagglehub`
@@ -112,36 +179,41 @@ Key dependencies:
 
 ## 💻 Usage
 
-### Train the MNIST CNN Model
+### 1. Road Pothole Segmentation
+Ensure your dataset path in `pothole.py` points to your extracted YOLO segmentation dataset (containing `data.yaml`, `train/images`, `valid/images`), then run:
 
-Run the training pipeline to train the model, inspect accuracy metrics, and plot the training history:
+```bash
+python pothole.py
+```
 
+### 2. Cat vs Dog Classification
+```bash
+python cat_dog.py
+```
+
+### 3. VGG16 Transfer Learning
+```bash
+python Transfer.py
+```
+
+### 4. Train the MNIST CNN Model
 ```bash
 python Train_CNN.py
 ```
 
-### Run Application Entrypoint
-
-```bash
-python main.py
-```
-
-### Kaggle Datasets Configuration (for `cat_dog.py`)
-
-If downloading datasets from Kaggle via `kagglehub` or the Kaggle API:
-1. Download your `kaggle.json` token from [Kaggle Account Settings](https://www.kaggle.com/settings).
-2. Place it in `~/.kaggle/kaggle.json` (or your local directory).
-> **Note**: `kaggle.json` is already excluded in `.gitignore` to prevent leaking private credentials.
-
 ---
 
-## 📊 Results
+## 📊 Results Summary
 
-The baseline MNIST CNN model achieves high accuracy (>98%) within just 2 epochs of training using the Adam optimizer and sparse categorical crossentropy loss.
+| Task | Model | Input Size | Key Metrics / Objectives |
+| :--- | :--- | :--- | :--- |
+| **Pothole Segmentation** | YOLOv8n-seg | 640x640 | Mask & Box mAP, real-time video detection |
+| **Cat vs Dog** | Custom CNN (3 Conv blocks) | 256x256 | Binary Crossentropy, Regularization (BN + Dropout) |
+| **Pet Classification** | VGG16 (Transfer Learning) | 150x150 | Feature extraction with pre-trained ImageNet weights |
+| **Digit Recognition** | Baseline CNN | 28x28 | >98% Test Accuracy on MNIST |
 
 ---
 
 ## 📄 License
 
 This repository is maintained for educational and machine learning research purposes.
-
